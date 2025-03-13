@@ -1,19 +1,60 @@
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors'); // Import the cors package
+const cors = require('cors');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Use the cors middleware with specific options
+// Allowed origins configuration
+const allowedOrigins = {
+  production: [
+    'https://jarviszxw.github.io',
+    'https://jarviszxw.github.io/TestWeb-website'
+  ],
+  development: [
+    'http://localhost:8080',
+    'http://127.0.0.1:5500'
+  ]
+};
+
+// Enhanced CORS configuration with origin validation
 app.use(cors({
-  // origin: 'http://localhost:8080', // Allow only this origin
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://jarviszxw.github.io/TestWeb-website/']
-    : ['http://localhost:8080', 'http://127.0.0.1:5500'],
-  methods: 'GET', // Allow only GET requests
-  allowedHeaders: ['Content-Type'] // Allow only specific headers
+  origin: function(origin, callback) {
+    // Get allowed origins based on environment
+    const origins = process.env.NODE_ENV === 'production' 
+      ? allowedOrigins.production 
+      : allowedOrigins.development;
+    
+    // Check if origin is allowed
+    if (!origin || origins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation'));
+    }
+  },
+  methods: ['GET', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true
 }));
+
+// Enhanced error handling middleware
+app.use((err, req, res, next) => {
+  if (err.message === 'CORS policy violation') {
+    console.error(`CORS Error: ${req.headers.origin} not allowed`);
+    res.status(403).json({
+      error: 'Origin not allowed by CORS policy'
+    });
+  } else {
+    next(err);
+  }
+});
+
+// Add CORS debugging middleware
+app.use((req, res, next) => {
+  console.log('Incoming request from origin:', req.headers.origin);
+  console.log('Current environment:', process.env.NODE_ENV);
+  next();
+});
 
 app.get('/get-fans-count', async (req, res) => {
   const userProfileUrl = 'https://api.bilibili.com/x/relation/stat?vmid=343104452'; // B站API URL
@@ -39,13 +80,6 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
-
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  console.log('Origin:', req.headers.origin);
-  next();
-});
-
 
 /* 项目结构
 ├── TestProject/
