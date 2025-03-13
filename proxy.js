@@ -40,6 +40,12 @@ app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
 
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Origin:', req.headers.origin);
+  next();
+});
+
 
 /* 项目结构
 ├── TestProject/
