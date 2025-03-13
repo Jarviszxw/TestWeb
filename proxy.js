@@ -9,7 +9,7 @@ const port = 3000;
 app.use(cors({
   // origin: 'http://localhost:8080', // Allow only this origin
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://Jarviszxw.github.io/TestWeb']
+    ? ['https://jarviszxw.github.io/TestWeb-website/']
     : ['http://localhost:8080', 'http://127.0.0.1:5500'],
   methods: 'GET', // Allow only GET requests
   allowedHeaders: ['Content-Type'] // Allow only specific headers
